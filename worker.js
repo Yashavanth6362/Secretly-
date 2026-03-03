@@ -15,7 +15,7 @@ export default {
       });
     }
 
-    // ---------------- UPLOAD PHOTO ----------------
+    // UPLOAD PHOTO
     if (path === "/uploadPhoto" && request.method === "POST") {
       const form = await request.formData();
       const file = form.get("photo");
@@ -31,7 +31,6 @@ export default {
 
       const filename = `${Date.now()}-${file.name}`;
 
-      // IMPORTANT: Your binding name is user_photos
       await env.user_photos.put(filename, file.stream(), {
         httpMetadata: { contentType: file.type }
       });
@@ -46,14 +45,13 @@ export default {
       });
     }
 
-    // ---------------- SAVE USER (KV) ----------------
+    // SAVE USER
     if (path === "/save" && request.method === "POST") {
       const data = await request.json();
       const key = "user:" + data.name.toLowerCase();
 
       data.timestamp = Date.now();
 
-      // KV name IS correct: PERSON_DB
       await env.PERSON_DB.put(key, JSON.stringify(data));
 
       return new Response(JSON.stringify({ status: "saved" }), {
@@ -64,7 +62,7 @@ export default {
       });
     }
 
-    // ---------------- GET USER (KV) ----------------
+    // GET USER
     if (path === "/get") {
       const name = url.searchParams.get("name");
 
