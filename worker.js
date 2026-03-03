@@ -43,7 +43,7 @@ const READ_URL =
   `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Data?key=${API_KEY}`;
 
 const WRITE_URL =
-  `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Data!A:L:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+  `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Data!A:K:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
 
 // ===========================
 // TELEGRAM CONFIG
@@ -82,7 +82,6 @@ function parseFields(caption) {
     dob: "",
     address: "",
     info: "",
-    education: "",
     family: ""
   };
 
@@ -99,7 +98,6 @@ function parseFields(caption) {
     else if (lower.startsWith("dob")) fields.dob = value;
     else if (lower.startsWith("address")) fields.address = value;
     else if (lower.startsWith("info")) fields.info = value;
-    else if (lower.startsWith("education")) fields.education = value;
     else if (lower.startsWith("family")) fields.family = value;
   });
 
@@ -116,23 +114,26 @@ PAN: ${f.pan ? "✔️" : "❌"} ${f.pan}
 DOB: ${f.dob ? "✔️" : "❌"} ${f.dob}
 Address: ${f.address ? "✔️" : "❌"} ${f.address}
 Info: ${f.info ? "✔️" : "❌"} ${f.info}
-Education: ${f.education ? "✔️" : "❌"} ${f.education}
 Family: ${f.family ? "✔️" : "❌"} ${f.family}
 `;
 }
 
 // ===========================
-// SAVE ROW INTO GOOGLE SHEET
+// SAVE ROW EXACTLY MATCHING YOUR SHEET COLUMNS
 // ===========================
 async function saveRow(d) {
-  const imageFormula =
-    `=IMAGE("https://api.telegram.org/file/bot${BOT_TOKEN}/${d.file_path}")`;
-
   const row = [
-    d.name, d.aadhar, d.phone, d.pan, d.dob,
-    d.address, d.info, d.education, d.family,
-    d.file_id, imageFormula,
-    new Date().toISOString()
+    d.name,         // A
+    d.file_id,      // B
+    d.aadhar,       // C
+    d.phone,        // D
+    d.pan,          // E
+    d.dob,          // F
+    d.address,      // G
+    d.info,         // H
+    d.family,       // I
+    d.file_path,    // J
+    new Date().toISOString() // K
   ];
 
   return fetch(WRITE_URL, {
@@ -143,7 +144,7 @@ async function saveRow(d) {
 }
 
 // ===========================
-// SEARCH FUNCTION (Website)
+// SEARCH FUNCTION (Website Only)
 // ===========================
 async function search(q) {
   const res = await fetch(READ_URL);
@@ -155,14 +156,21 @@ async function search(q) {
 
     if (
       (q.name && r[0]?.toLowerCase() === q.name.toLowerCase()) ||
-      (q.aadhar && r[1] === q.aadhar) ||
-      (q.phone && r[2] === q.phone)
+      (q.aadhar && r[2] === q.aadhar) ||
+      (q.phone && r[3] === q.phone)
     ) {
       return {
-        name: r[0], aadhar: r[1], phone: r[2], pan: r[3], dob: r[4],
-        address: r[5], info: r[6], education: r[7], family: r[8],
-        file_id: r[9], embed_link: r[10],
-        timestamp: r[11]
+        name: r[0],
+        file_id: r[1],
+        aadhar: r[2],
+        phone: r[3],
+        pan: r[4],
+        dob: r[5],
+        address: r[6],
+        info: r[7],
+        family: r[8],
+        file_path: r[9],
+        timestamp: r[10]
       };
     }
   }
