@@ -3,7 +3,6 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -15,7 +14,6 @@ export default {
       });
     }
 
-    // UPLOAD PHOTO
     if (path === "/uploadPhoto" && request.method === "POST") {
       const form = await request.formData();
       const file = form.get("photo");
@@ -45,7 +43,6 @@ export default {
       });
     }
 
-    // SAVE USER
     if (path === "/save" && request.method === "POST") {
       const data = await request.json();
       const key = "user:" + data.name.toLowerCase();
@@ -62,7 +59,6 @@ export default {
       });
     }
 
-    // GET USER
     if (path === "/get") {
       const name = url.searchParams.get("name");
 
