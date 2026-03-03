@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS
+    // CORS SUPPORT
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -15,34 +15,30 @@ export default {
       });
     }
 
-    // =============== UPLOAD PHOTO ===============
+    // ================= UPLOAD PHOTO ======================
     if (path === "/uploadPhoto" && request.method === "POST") {
       const form = await request.formData();
       const file = form.get("photo");
-
       if (!file) {
         return new Response(JSON.stringify({ error: "No file" }), {
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
         });
       }
 
-      // Create random filename
       const filename = `${Date.now()}-${file.name}`;
-
-      // Upload to R2
-      await env.R2BUCKET.put(filename, file.stream(), {
+      
+      await env.user_photos.put(filename, file.stream(), {
         httpMetadata: { contentType: file.type }
       });
 
-      // Public URL
-      const photo_url = `https://pub-${env.R2BUCKET.id}.r2.dev/${filename}`;
+      const publicURL = `https://pub-${env.user_photos.id}.r2.dev/${filename}`;
 
-      return new Response(JSON.stringify({ photo_url }), {
+      return new Response(JSON.stringify({ photo_url: publicURL }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
 
-    // =============== SAVE USER DETAILS ===============
+    // ================= SAVE / UPDATE USER ======================
     if (path === "/save" && request.method === "POST") {
       const data = await request.json();
       const key = "user:" + data.name.toLowerCase();
@@ -56,17 +52,19 @@ export default {
       });
     }
 
-    // =============== GET USER DETAILS ===============
+    // ================= GET USER ======================
     if (path === "/get") {
-      const name = url.searchParams.get("name")?.toLowerCase();
-      if (!name)
+      const name = url.searchParams.get("name");
+
+      if (!name) {
         return new Response("{}", {
           headers: { "Access-Control-Allow-Origin": "*" }
         });
+      }
 
-      const json = await env.PERSON_DB.get("user:" + name);
+      const data = await env.PERSON_DB.get("user:" + name.toLowerCase());
 
-      return new Response(json || "{}", {
+      return new Response(data || "{}", {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
