@@ -3,6 +3,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // CORS for browser access
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -14,71 +15,54 @@ export default {
       });
     }
 
+    // PHOTO UPLOAD TO R2
     if (path === "/uploadPhoto" && request.method === "POST") {
       const form = await request.formData();
       const file = form.get("photo");
-
       if (!file) {
         return new Response(JSON.stringify({ error: "No file uploaded" }), {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          }
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
         });
       }
 
       const filename = `${Date.now()}-${file.name}`;
-
       await env.user_photos.put(filename, file.stream(), {
         httpMetadata: { contentType: file.type }
       });
 
-      const publicURL = `https://pub-${env.user_photos.id}.r2.dev/${filename}`;
+      const publicURL = `https://pub-${env.user_photos}.r2.dev/${filename}`;
 
       return new Response(JSON.stringify({ photo_url: publicURL }), {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
 
+    // SAVE USER DATA TO KV
     if (path === "/save" && request.method === "POST") {
       const data = await request.json();
       const key = "user:" + data.name.toLowerCase();
-
       data.timestamp = Date.now();
-
       await env.PERSON_DB.put(key, JSON.stringify(data));
 
       return new Response(JSON.stringify({ status: "saved" }), {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
 
+    // GET USER FROM KV
     if (path === "/get") {
       const name = url.searchParams.get("name");
+      if (!name) return new Response("{}", {
+        headers: { "Access-Control-Allow-Origin": "*" }
+      });
 
-      if (!name) {
-        return new Response("{}", {
-          headers: { "Access-Control-Allow-Origin": "*" }
-        });
-      }
-
-      const data = await env.PERSON_DB.get("user:" + name.toLowerCase());
-
-      return new Response(data || "{}", {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
+      const value = await env.PERSON_DB.get("user:" + name.toLowerCase());
+      return new Response(value || "{}", {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
 
-    return new Response("Invalid", {
+    return new Response("Invalid path", {
       headers: { "Access-Control-Allow-Origin": "*" }
     });
   }
