@@ -48,7 +48,7 @@ const WRITE_URL =
 // ===========================
 // TELEGRAM CONFIG
 // ===========================
-const BOT_TOKEN = "7087197327:AAEQowshPIbjdi_uD2zObIKOHRHFca7AuEw";
+const BOT_TOKEN = "7095821097:AAG14ImxyLqaEH9l57eYopuSXtRqqG-8XpM";
 
 // send a reply back to Telegram
 async function botReply(chat_id, text) {
